@@ -1,0 +1,14 @@
+Webpage connection
+
+1. Load comparison-chart.js with a script tag, then place <canvas id="location-comparison"></canvas> where the chart should appear.
+2. Parse data.csv into row objects with date, region, and numeric value fields. Include a unit field if the CSV has one. The chart does not fetch or parse the CSV itself.
+3. Run trend-analysis.js and pass its result through with the rows:
+
+   ComparisonChart.draw(
+     document.getElementById("location-comparison"),
+     csvRows,
+     trendResults,
+     { dateKey: "date", placeKey: "region", valueKey: "value", unit: measurementUnit }
+   );
+
+The two regions can be selected explicitly with locations: ["place A", "place B"]. By default, the chart uses the two region names found in the rows. Trend results may be an array of objects with region/location/place and direction fields, or an object keyed by region. A numeric slope or estimate is also accepted and labeled increasing, decreasing, or no change by its sign; the chart does not calculate the slope. Set measurement to the measurement's name if the default label is too general. Update field names and trend-result mapping to match the actual output of trend-analysis.js when it arrives.
