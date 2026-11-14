@@ -1,0 +1,70 @@
+Earth Trend Detective — Member 2 analysis
+
+Files
+• trend-analysis.js calculates results from CSV text each time it runs. It contains no fixed dataset results.
+• The source CSV was read from the file supplied for this analysis. No values were changed.
+
+1. Dataset overview
+The CSV has 3 columns: date, region, value. It contains 360 rows for two locations: Delhi and Mumbai. The dates are monthly from January 2010 to December 2024 (15 years). Each location has 180 monthly observations.
+
+The file does not say what “value” measures or give its units or a source link. I therefore cannot identify the measurement, call the values rainfall or temperature, or confirm that they are NASA data. The value ranges are 0 to 12.11 for Delhi and 0 to 45.34 for Mumbai. These values should not be compared for importance until the measurement and units are confirmed.
+
+2. Data quality
+• No blank date, region, or value fields were found.
+• All values were numeric. There were no negative values. There are 14 zero values in Delhi and 16 in Mumbai; zeros are reported as found, not treated as errors.
+• No duplicate date/location rows were found.
+• Both locations have all 180 months in the shared date range; no missing months were found.
+• Dates follow YYYY-MM. Values are consistent numeric entries. This inspection cannot tell whether any value is physically unusual because the measurement and units are unknown.
+
+3. Methods in the JavaScript
+• Linear regression: fits a straight trend over time and includes calendar-month terms to account for the repeating monthly pattern. Slope is in “value units per year.” A conventional two-sided t-test gives the regression p-value.
+• Seasonal Mann–Kendall: checks whether values tend to go up or down by comparing the same calendar month across years. It reports S, a standardized z statistic, and an approximate two-sided p-value with tie adjustment.
+• Seasonal Sen slope: takes the median of pairwise slopes between observations from the same calendar month. It is less affected by a few extreme values than ordinary regression.
+• Autocorrelation: reports the correlation between neighboring monthly regression residuals. This is a diagnostic only; it does not correct the regression or p-values.
+• Seasonality: reports each calendar month’s average and the difference between the highest and lowest month averages. This is descriptive, not a formal test that seasonality is statistically significant.
+
+4. Results (calculated from the supplied CSV)
+
+Delhi
+• Regression slope: −0.00775 value units per year (slight downward estimate); p = 0.780. This is not statistically significant at 0.05.
+• Seasonal Mann–Kendall: S = 8, z = 0.101, p = 0.920. This does not show a statistically significant monotonic trend.
+• Seasonal Sen slope: 0 value units per year.
+• Lag-one residual autocorrelation: 0.119, a small positive value in this simple check.
+• Monthly average range: 7.505 value units (highest monthly mean minus lowest monthly mean). Month-to-month averages vary, but this descriptive range is not a formal seasonality test.
+• Summary: Neither trend method finds strong evidence of a trend in this dataset.
+
+Mumbai
+• Regression slope: +0.12767 value units per year (upward estimate); p = 0.124. This is not statistically significant at 0.05.
+• Seasonal Mann–Kendall: S = 222, z = 3.191, p = 0.00142. This test detects a statistically significant upward pattern at 0.05.
+• Seasonal Sen slope: +0.00500 value units per year.
+• Lag-one residual autocorrelation: −0.003, close to zero in this simple check.
+• Monthly average range: 32.443 value units (highest monthly mean minus lowest monthly mean). Month-to-month averages vary, but this descriptive range is not a formal seasonality test.
+• Summary: The methods disagree: Mann–Kendall detects an upward pattern, while regression does not. Report the evidence as mixed. The reported regression and Sen rates differ substantially, so do not present one rate as settled.
+
+5. Comparing locations
+Delhi’s regression and Sen slopes are slightly negative; Mumbai’s are positive. Delhi’s tests do not detect a trend. Mumbai has mixed evidence because the seasonal Mann–Kendall test is significant while the regression test is not. The slopes are descriptive comparisons only. This analysis does not perform a formal test of whether the locations’ trends differ, so it does not establish that one location is changing faster than the other.
+
+6. What p-values mean
+A p-value measures how surprising data like these would be under a particular no-trend statistical model. The 0.05 cutoff is a convention for flagging results for further attention. It is not the chance that a trend is real. A small p-value does not prove a cause or show that a change is important in practice.
+
+7. Scientific interpretation and limits
+These calculations describe only the supplied numbers. The source, measurement, units, and data collection method are missing, so the result is not scientifically interpretable yet and NASA provenance is unverified. Positive autocorrelation can make conventional regression uncertainty too small; the diagnostic here is not a correction. The Mann–Kendall p-value is an approximation. Month-matched comparisons account for a repeating calendar pattern, but not every possible climate, measurement, or sampling issue. Statistical significance does not establish causation or practical importance. No “years to detect” forecast is calculated.
+
+Conclusion
+For Delhi, neither trend test detects a clear trend. For Mumbai, the tests disagree, so the evidence is mixed. Before using these findings on the public website, ask Member 1 for the official source, what the value measures, and its units. Show the source beside the results and keep the chart and text based on the same filtered CSV rows.
+
+8. How Member 3 / Member 6 can use the module
+The module works in a browser without a server or API key. Add this script tag to the webpage:
+<script src="trend-analysis.js"></script>
+
+If the page has a file input with id="csv-file", read the selected CSV and analyse it like this:
+document.getElementById("csv-file").addEventListener("change", async (event) => {
+  const csvText = await event.target.files[0].text();
+  const results = EarthTrendAnalysis.analyzeCSV(csvText);
+  console.log(results.locations.Delhi);
+  console.log(results.locations.Mumbai);
+});
+
+The chart teammate can use each location’s regression slope, seasonalSenSlope, and trend fields. Use the same CSV rows for both the chart and analysis. Main result fields: locations[place].regression.slopePerYear, regression.pValue, mannKendall.statisticS, mannKendall.pValue, sensSlope.slopePerYear, autocorrelation.lag1Residual, and seasonality.monthlyMeans. The full structured output also includes quality checks and a comparison summary.
+
+AI disclosure: AI assisted in writing the analysis code and notes. Include this in the team’s disclosure.
